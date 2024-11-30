@@ -34,11 +34,13 @@
             <Button text="Use Case Diagram" fx:id="useCaseButton" style="-fx-min-width: 150; -fx-background-color: #2980B9; -fx-text-fill: white; -fx-border-radius: 10px; -fx-font-weight: bold;"/>
             <Button text="Class Diagram" fx:id="classDiagramButton" style="-fx-min-width: 150; -fx-background-color: #8E44AD; -fx-text-fill: white; -fx-border-radius: 10px; -fx-font-weight: bold;"/>
 
-            <Label text="Use Case Diagram Components" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
-            <ListView fx:id="useCaseComponentList" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
+            <Label text="Use Case Diagram Components" fx:id="useCaseLabel" visible="false" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
 
-            <Label text="Class Diagram Components" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
-            <ListView fx:id="classComponentList" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
+            <!-- StackPane to hold both ListViews -->
+            <StackPane>
+                <ListView fx:id="useCaseComponentList" visible="false" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
+                <ListView fx:id="classComponentList" visible="false" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
+            </StackPane>
         </VBox>
     </left>
 
