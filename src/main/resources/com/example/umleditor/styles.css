@@ -1,0 +1,91 @@
+/* General UI Layout */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* Menu Bar */
+.menu-bar {
+    -fx-background-color: #34495e;
+}
+
+/* Menu Items - Text Color */
+.menu-bar .menu .menu-item {
+    -fx-text-fill: #ecf0f1;
+}
+
+/* Menu Item Hover Effects */
+.menu-bar .menu .menu-item:hover {
+    -fx-background-color: #2c3e50;
+    -fx-text-fill: #3498db;
+}
+
+/* Button Hover Effects */
+.button:hover {
+    -fx-background-color: #3498DB;
+}
+
+/* Tool Palette Buttons */
+.button {
+    -fx-background-color: #2980B9;
+    -fx-text-fill: white;
+    -fx-padding: 10 20;
+    -fx-font-size: 14px;
+    -fx-border-radius: 10px;
+}
+
+/* Button Focused State */
+.button:focused {
+    -fx-background-color: #1C6BA0;
+}
+
+/* Left Tool Palette - Background */
+.left {
+    -fx-background-color: #ecf0f1;
+    -fx-padding: 20;
+    -fx-border-width: 1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+}
+
+/* Drawing Canvas Shadow */
+.pane {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #2980B9;
+    -fx-border-width: 2;
+    -fx-border-radius: 10px;
+    -fx-effect: dropshadow(gaussian, #000000, 8, 0, 0, 8);
+}
+
+/* Right Panel */
+.right {
+    -fx-background-color: green;
+    -fx-padding: 20;
+    -fx-border-width: 1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+}
+
+/* Bottom Status Bar */
+.bottom {
+    -fx-background-color: #34495e;
+    -fx-padding: 10;
+}
+
+.bottom .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
+
+/* ListView - Component List */
+.list-view {
+    -fx-background-color: green;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+}
+
+/* List Item Hover */
+.list-cell:hover {
+    -fx-background-color: green;
+    -fx-text-fill: white;
+}
