@@ -7,8 +7,6 @@
 <?import java.net.URL?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.umleditor.ui.MainController">
     <!-- Top: Menu Bar -->
-
-
     <top>
         <MenuBar style="-fx-background-color: #678DC9;">
             <Menu text="File" style="-fx-text-fill: #ecf0f1;">
@@ -36,7 +34,6 @@
 
             <Label text="Use Case Diagram Components" fx:id="useCaseLabel" visible="false" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
 
-            <!-- StackPane to hold both ListViews -->
             <StackPane>
                 <ListView fx:id="useCaseComponentList" visible="false" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
                 <ListView fx:id="classComponentList" visible="false" style="-fx-min-width: 150; -fx-border-color: #bdc3c7; -fx-background-color: white; -fx-border-radius: 5px;"/>
@@ -46,7 +43,11 @@
 
     <!-- Center: Drawing Canvas -->
     <center>
-        <Pane fx:id="drawingCanvas" style="-fx-background-color: #ffffff; -fx-border-color: #2980B9; -fx-border-width: 2; -fx-border-radius: 10px; -fx-effect: dropshadow(gaussian, #000000, 8, 0, 0, 8);"/>
+        <Canvas fx:id="drawingCanvas" width="1200" height="1000"
+                style="-fx-background-color: #ffffff;
+                   -fx-border-color: #2980B9;
+                   -fx-border-width: 2;
+                   -fx-border-radius: 10px;" />
     </center>
 
     <!-- Bottom: Status Bar -->
@@ -55,5 +56,4 @@
             <Label text="Ready" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
         </HBox>
     </bottom>
-
 </BorderPane>
