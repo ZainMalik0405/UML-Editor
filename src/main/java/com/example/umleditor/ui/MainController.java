@@ -3,6 +3,7 @@ package com.example.umleditor.ui;
 import com.example.umleditor.data.Actor;
 import com.example.umleditor.data.UseCase;
 import com.example.umleditor.ui.components.ActorComponent;
+import com.example.umleditor.ui.components.Connection;
 import com.example.umleditor.ui.components.UseCaseComponent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -12,8 +13,11 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +43,17 @@ public class MainController {
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
+    private List<Connection> connections = new ArrayList<>();
     private ContextMenu contextMenu = new ContextMenu();
+    private ActorComponent selectedActor = null;
+    private boolean creatingConnection = false;
+    private boolean deletingConnection = false;
+    private boolean showSystemBoundary = false;
 
     @FXML
     public void initialize() {
         // Set up the component lists
-        useCaseComponentList.getItems().addAll("Actor", "Use Case");
+        useCaseComponentList.getItems().addAll("Actor", "Use Case", "System");
         classComponentList.getItems().addAll("Class", "Interface");
 
         useCaseButton.setOnAction(event -> showUseCaseComponents());
@@ -60,20 +69,28 @@ public class MainController {
 
         // Set up context menu
         MenuItem deleteItem = new MenuItem("Delete");
-        deleteItem.setOnAction(event -> deleteSelectedActor());
+        deleteItem.setOnAction(event -> deleteSelectedComponent());
         MenuItem addTextItem = new MenuItem("Add Text");
         addTextItem.setOnAction(event -> addTextToSelectedComponent());
-        contextMenu.getItems().addAll(deleteItem, addTextItem);
+        MenuItem createConnectionItem = new MenuItem("Create Connection");
+        createConnectionItem.setOnAction(event -> startCreatingConnection());
+        MenuItem deleteConnectionItem = new MenuItem("Delete Connection");
+        deleteConnectionItem.setOnAction(event -> startDeletingConnection());
+        contextMenu.getItems().addAll(deleteItem, addTextItem, createConnectionItem, deleteConnectionItem);
     }
 
     private void showUseCaseComponents() {
         useCaseComponentList.setVisible(true);
         classComponentList.setVisible(false);
+        showSystemBoundary = true;
+        drawComponents();
     }
 
     private void showClassDiagramComponents() {
         classComponentList.setVisible(true);
         useCaseComponentList.setVisible(false);
+        showSystemBoundary = false;
+        drawComponents();
     }
 
     private void handleComponentSelection() {
@@ -121,6 +138,7 @@ public class MainController {
 
                     if (x >= actorX - size / 2 && x <= actorX + size / 2 && y >= actorY - size / 2 && y <= actorY + size * 1.5) {
                         actor.setSelected(true);
+                        selectedActor = actor;
                     } else {
                         actor.setSelected(false);
                     }
@@ -135,6 +153,34 @@ public class MainController {
 
                     if (x >= useCaseX - width / 2 && x <= useCaseX + width / 2 && y >= useCaseY - height / 2 && y <= useCaseY + height / 2) {
                         useCase.setSelected(true);
+                        if (creatingConnection && selectedActor != null) {
+                            // Create a connection between the selected actor and use case
+                            Connection connection = new Connection(selectedActor, useCase);
+                            connections.add(connection);
+                            selectedActor = null;
+                            creatingConnection = false;
+                            drawComponents();
+                        } else if (deletingConnection && selectedActor != null) {
+                            // Delete the connection between the selected actor and use case
+                            boolean connectionFound = false;
+                            for (Connection connection : connections) {
+                                if (connection.getActor() == selectedActor && connection.getUseCase() == useCase) {
+                                    connections.remove(connection);
+                                    connectionFound = true;
+                                    break;
+                                }
+                            }
+                            if (!connectionFound) {
+                                Alert alert = new Alert(AlertType.ERROR);
+                                alert.setTitle("Error");
+                                alert.setHeaderText("No Connection Found");
+                                alert.setContentText("There is no connection between the selected actor and use case.");
+                                alert.showAndWait();
+                            }
+                            selectedActor = null;
+                            deletingConnection = false;
+                            drawComponents();
+                        }
                     } else {
                         useCase.setSelected(false);
                     }
@@ -172,20 +218,40 @@ public class MainController {
     private void drawComponents() {
         GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
+        if (showSystemBoundary) {
+            drawSystemBoundary();
+        }
         for (ActorComponent actor : actors) {
             actor.draw(gc);
         }
         for (UseCaseComponent useCase : useCases) {
             useCase.draw(gc);
         }
+        for (Connection connection : connections) {
+            connection.draw(gc);
+        }
     }
 
-    private void deleteSelectedActor() {
+    private void drawSystemBoundary() {
+        GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
+        gc.setLineWidth(2); gc.setStroke(Color.GRAY);
+        gc.strokeRect(150, 10, drawingCanvas.getWidth() - 200, drawingCanvas.getHeight() - 50); // Adjusted height
+         }
+
+    private void deleteSelectedComponent() {
         actors.removeIf(ActorComponent::isSelected);
         useCases.removeIf(UseCaseComponent::isSelected);
+        connections.removeIf(connection -> connection.getActor().isSelected() || connection.getUseCase().isSelected());
         drawComponents();
     }
 
+    private void startCreatingConnection() {
+        creatingConnection = true;
+    }
+
+    private void startDeletingConnection() {
+        deletingConnection = true;
+    }
     private void addTextToSelectedComponent() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Text");
@@ -205,4 +271,5 @@ public class MainController {
             drawComponents();
         });
     }
+
 }
