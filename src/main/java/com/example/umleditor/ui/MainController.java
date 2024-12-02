@@ -15,8 +15,13 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -46,6 +51,7 @@ public class MainController {
     private List<Connection> connections = new ArrayList<>();
     private ContextMenu contextMenu = new ContextMenu();
     private ActorComponent selectedActor = null;
+    private UseCaseComponent selectedUseCase = null;
     private boolean creatingConnection = false;
     private boolean deletingConnection = false;
     private boolean showSystemBoundary = false;
@@ -53,7 +59,7 @@ public class MainController {
     @FXML
     public void initialize() {
         // Set up the component lists
-        useCaseComponentList.getItems().addAll("Actor", "Use Case", "System");
+        useCaseComponentList.getItems().addAll("Actor", "Use Case");
         classComponentList.getItems().addAll("Class", "Interface");
 
         useCaseButton.setOnAction(event -> showUseCaseComponents());
@@ -160,26 +166,27 @@ public class MainController {
                             selectedActor = null;
                             creatingConnection = false;
                             drawComponents();
-                        } else if (deletingConnection && selectedActor != null) {
-                            // Delete the connection between the selected actor and use case
-                            boolean connectionFound = false;
-                            for (Connection connection : connections) {
-                                if (connection.getActor() == selectedActor && connection.getUseCase() == useCase) {
-                                    connections.remove(connection);
-                                    connectionFound = true;
-                                    break;
-                                }
-                            }
-                            if (!connectionFound) {
-                                Alert alert = new Alert(AlertType.ERROR);
-                                alert.setTitle("Error");
-                                alert.setHeaderText("No Connection Found");
-                                alert.setContentText("There is no connection between the selected actor and use case.");
-                                alert.showAndWait();
-                            }
-                            selectedActor = null;
-                            deletingConnection = false;
-                            drawComponents();
+                        } else if (creatingConnection && selectedUseCase != null) {
+                            // Ask user for connection type (<<extend>> or <<include>>)
+                            TextInputDialog dialog = new TextInputDialog();
+                            dialog.setTitle("Connection Type");
+                            dialog.setHeaderText("Enter connection type (<<extend>> or <<include>>):");
+                            Optional<String> result = dialog.showAndWait();
+                            result.ifPresent(type -> {
+                                // Create a connection between the selected use cases
+                                Connection connection = new Connection(selectedUseCase, useCase, type);
+                                connection.setLabel(type);
+                                connections.add(connection);
+                                selectedUseCase = null;
+                                creatingConnection = false;
+                                drawComponents();
+                            });
+                        } else if (creatingConnection && selectedUseCase == null) {
+                            // Select the first use case for connection
+                            selectedUseCase = useCase;
+                        } else if (deletingConnection) {
+                            // Delete the connection involving the selected use case
+                            deleteConnection(useCase);
                         }
                     } else {
                         useCase.setSelected(false);
@@ -228,15 +235,20 @@ public class MainController {
             useCase.draw(gc);
         }
         for (Connection connection : connections) {
-            connection.draw(gc);
+            if (connection.getActor() != null) {
+                connection.draw(gc);
+            } else {
+                connection.drawUseCaseToUseCase(gc);
+            }
         }
     }
 
     private void drawSystemBoundary() {
         GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
-        gc.setLineWidth(2); gc.setStroke(Color.GRAY);
+        gc.setLineWidth(2);
+        gc.setStroke(Color.GRAY);
         gc.strokeRect(150, 10, drawingCanvas.getWidth() - 200, drawingCanvas.getHeight() - 50); // Adjusted height
-         }
+    }
 
     private void deleteSelectedComponent() {
         actors.removeIf(ActorComponent::isSelected);
@@ -252,6 +264,7 @@ public class MainController {
     private void startDeletingConnection() {
         deletingConnection = true;
     }
+
     private void addTextToSelectedComponent() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Text");
@@ -272,4 +285,30 @@ public class MainController {
         });
     }
 
+    private void deleteConnection(UseCaseComponent useCase) {
+        boolean connectionFound = false;
+        for (Connection connection : connections) {
+            if (connection.getUseCase1() == useCase || connection.getUseCase2() == useCase) {
+                connections.remove(connection);
+                connectionFound = true;
+                break;
+            }
+        }
+        if (!connectionFound) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No Connection Found");
+            alert.setContentText("There is no connection with the selected use case.");
+            alert.showAndWait();
+        }
+        drawComponents();
+    }
+
+    private void deleteConnection(ActorComponent actor) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Invalid Selection");
+        alert.setContentText("Cannot delete connection from an actor. Please select a use case.");
+        alert.showAndWait();
+    }
 }
