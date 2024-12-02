@@ -4,7 +4,6 @@
 <?import javafx.geometry.Pos?>
 <?import javafx.scene.canvas.*?>
 
-<?import java.net.URL?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.umleditor.ui.MainController">
     <!-- Top: Menu Bar -->
     <top>
@@ -12,7 +11,7 @@
             <Menu text="File" style="-fx-text-fill: #ecf0f1;">
                 <MenuItem text="New"/>
                 <MenuItem text="Open"/>
-                <MenuItem text="Save"/>
+                <MenuItem text="Save" fx:id="saveMenuItem"/>
                 <MenuItem text="Exit"/>
             </Menu>
             <Menu text="Edit" style="-fx-text-fill: #ecf0f1;">

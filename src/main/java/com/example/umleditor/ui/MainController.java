@@ -15,15 +15,20 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.embed.swing.SwingFXUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +50,9 @@ public class MainController {
     @FXML
     private Canvas drawingCanvas;
 
+    @FXML
+    private MenuItem saveMenuItem;
+
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
@@ -55,15 +63,16 @@ public class MainController {
     private boolean creatingConnection = false;
     private boolean deletingConnection = false;
     private boolean showSystemBoundary = false;
+    private boolean isDiagramModified = false;
 
     @FXML
     public void initialize() {
         // Set up the component lists
-        useCaseComponentList.getItems().addAll("Actor", "Use Case");
+        useCaseComponentList.getItems().addAll("Actor", "Use Case", "System");
         classComponentList.getItems().addAll("Class", "Interface");
 
         useCaseButton.setOnAction(event -> showUseCaseComponents());
-        classDiagramButton.setOnAction(event -> showClassDiagramComponents());
+        classDiagramButton.setOnAction(event -> switchToClassDiagram());
 
         // Handle canvas mouse events
         drawingCanvas.setOnMouseClicked(this::handleCanvasClick);
@@ -83,6 +92,9 @@ public class MainController {
         MenuItem deleteConnectionItem = new MenuItem("Delete Connection");
         deleteConnectionItem.setOnAction(event -> startDeletingConnection());
         contextMenu.getItems().addAll(deleteItem, addTextItem, createConnectionItem, deleteConnectionItem);
+
+        // Set up save menu item
+        saveMenuItem.setOnAction(event -> saveDiagramAsImage());
     }
 
     private void showUseCaseComponents() {
@@ -105,6 +117,7 @@ public class MainController {
     }
 
     private void handleCanvasClick(MouseEvent event) {
+        isDiagramModified = true;
         if (event.getButton() == MouseButton.SECONDARY) {
             // Handle right-click for context menu
             for (ActorComponent actor : actors) {
@@ -310,5 +323,59 @@ public class MainController {
         alert.setHeaderText("Invalid Selection");
         alert.setContentText("Cannot delete connection from an actor. Please select a use case.");
         alert.showAndWait();
+    }
+
+    private void switchToClassDiagram() {
+        if (isDiagramModified) {
+            Alert alert = new Alert(AlertType.WARNING, "You have unsaved changes. Do you still want to switch to the class diagram?", ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.YES) {
+                // Save the diagram (implement save logic here)
+                clearCanvas();
+                showClassDiagramComponents();
+            }
+        }
+    }
+
+    private void clearCanvas() {
+        GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
+        actors.clear();
+        useCases.clear();
+        connections.clear();
+    }
+
+    private void saveDiagramAsImage() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Diagram");
+        fileChooser.getExtensionFilters().addAll(
+                new ExtensionFilter("PNG Files", "*.png"),
+                new ExtensionFilter("JPEG Files", "*.jpg", "*.jpeg")
+        );
+        File file = fileChooser.showSaveDialog(drawingCanvas.getScene().getWindow());
+        if (file != null) {
+            try {
+                WritableImage writableImage = new WritableImage((int) drawingCanvas.getWidth(), (int) drawingCanvas.getHeight());
+                drawingCanvas.snapshot(null, writableImage);
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(writableImage, null);
+                ImageIO.write(bufferedImage, getFileExtension(file), file);
+            } catch (IOException ex) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Could not save image");
+                alert.setContentText("An error occurred while saving the image: " + ex.getMessage());
+                alert.showAndWait();
+            }
+        }
+    }
+
+
+    private String getFileExtension(File file) {
+        String fileName = file.getName();
+        if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
+            return fileName.substring(fileName.lastIndexOf(".") + 1);
+        } else {
+            return "";
+        }
     }
 }
