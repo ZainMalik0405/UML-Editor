@@ -327,10 +327,10 @@ public class MainController {
 
     private void switchToClassDiagram() {
         if (isDiagramModified) {
-            Alert alert = new Alert(AlertType.WARNING, "You have unsaved changes. Do you still want to switch to the class diagram?", ButtonType.YES, ButtonType.NO);
+            Alert alert = new Alert(AlertType.WARNING, "Are you sure you want to switch to the class diagram? If not saved, then SAVE the diagram", ButtonType.YES, ButtonType.NO);
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.YES) {
-                // Save the diagram (implement save logic here)
+
                 clearCanvas();
                 showClassDiagramComponents();
             }
