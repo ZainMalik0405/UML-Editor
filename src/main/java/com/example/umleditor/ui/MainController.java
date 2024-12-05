@@ -158,6 +158,10 @@ public class MainController {
                     if (x >= actorX - size / 2 && x <= actorX + size / 2 && y >= actorY - size / 2 && y <= actorY + size * 1.5) {
                         actor.setSelected(true);
                         selectedActor = actor;
+                        if (deletingConnection) {
+                            // Delete the connection involving the selected actor
+                            deleteConnection(actor);
+                        }
                     } else {
                         actor.setSelected(false);
                     }
@@ -300,30 +304,49 @@ public class MainController {
 
     private void deleteConnection(UseCaseComponent useCase) {
         boolean connectionFound = false;
+        List<Connection> connectionsToRemove = new ArrayList<>();
         for (Connection connection : connections) {
             if (connection.getUseCase1() == useCase || connection.getUseCase2() == useCase) {
-                connections.remove(connection);
+                connectionsToRemove.add(connection);
                 connectionFound = true;
-                break;
             }
         }
+        connections.removeAll(connectionsToRemove);
         if (!connectionFound) {
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("No Connection Found");
             alert.setContentText("There is no connection with the selected use case.");
             alert.showAndWait();
+        } else {
+            deletingConnection = false; // Reset the flag after successful deletion
         }
         drawComponents();
     }
 
+
     private void deleteConnection(ActorComponent actor) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Invalid Selection");
-        alert.setContentText("Cannot delete connection from an actor. Please select a use case.");
-        alert.showAndWait();
+        boolean connectionFound = false;
+        List<Connection> connectionsToRemove = new ArrayList<>();
+        for (Connection connection : connections) {
+            if (connection.getActor() == actor) {
+                connectionsToRemove.add(connection);
+                connectionFound = true;
+            }
+        }
+        connections.removeAll(connectionsToRemove);
+        if (!connectionFound) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No Connection Found");
+            alert.setContentText("There is no connection with the selected actor.");
+            alert.showAndWait();
+        } else {
+            deletingConnection = false; // Reset the flag after successful deletion
+        }
+        drawComponents();
     }
+
 
     private void switchToClassDiagram() {
         if (isDiagramModified) {
