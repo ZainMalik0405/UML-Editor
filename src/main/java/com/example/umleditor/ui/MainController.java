@@ -2,20 +2,12 @@ package com.example.umleditor.ui;
 
 import com.example.umleditor.data.Actor;
 import com.example.umleditor.data.UseCase;
-import com.example.umleditor.ui.components.ActorComponent;
-import com.example.umleditor.ui.components.Connection;
-import com.example.umleditor.ui.components.UseCaseComponent;
+import com.example.umleditor.ui.components.*;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -56,23 +48,30 @@ public class MainController {
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
+    private List<ClassComponent> classes=new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
+    private List<ClassDiagramConnection> classConnections=new ArrayList<>();
     private ContextMenu contextMenu = new ContextMenu();
+    private ContextMenu contextMenu2 = new ContextMenu();
     private ActorComponent selectedActor = null;
     private UseCaseComponent selectedUseCase = null;
+    private ClassComponent selectedClass = null;
     private boolean creatingConnection = false;
     private boolean deletingConnection = false;
     private boolean showSystemBoundary = false;
     private boolean isDiagramModified = false;
 
+    private ClassComponent startClass = null;
+    private ArrowType selectedArrowType = null;
+
     @FXML
     public void initialize() {
         // Set up the component lists
-        useCaseComponentList.getItems().addAll("Actor", "Use Case", "System");
-        classComponentList.getItems().addAll("Class", "Interface");
+        useCaseComponentList.getItems().addAll("Actor", "Use Case");
+        classComponentList.getItems().addAll("Class", "Arrow");
 
         useCaseButton.setOnAction(event -> showUseCaseComponents());
-        classDiagramButton.setOnAction(event -> switchToClassDiagram());
+        classDiagramButton.setOnAction(event -> showClassDiagramComponents());
 
         // Handle canvas mouse events
         drawingCanvas.setOnMouseClicked(this::handleCanvasClick);
@@ -81,7 +80,7 @@ public class MainController {
 
         // Set up drag-and-drop events on the actor component
         useCaseComponentList.setOnMouseClicked(event -> handleComponentSelection());
-
+        classComponentList.setOnMouseClicked(event -> handleComponentSelection());
         // Set up context menu
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(event -> deleteSelectedComponent());
@@ -93,14 +92,27 @@ public class MainController {
         deleteConnectionItem.setOnAction(event -> startDeletingConnection());
         contextMenu.getItems().addAll(deleteItem, addTextItem, createConnectionItem, deleteConnectionItem);
 
+
+        MenuItem addAttribute = new MenuItem("Add Attribute");
+        addAttribute.setOnAction(event->addAttributesFunction());
+
+        MenuItem addMethod = new MenuItem("Add Method");
+        addMethod.setOnAction(event->addMethodsFunction());
+
+        MenuItem addArrow=new MenuItem("Add Arrow");
+        addArrow.setOnAction(event->addClassDiagramConnection());
+
+        contextMenu2.getItems().addAll(addAttribute,addMethod,addArrow);
         // Set up save menu item
         saveMenuItem.setOnAction(event -> saveDiagramAsImage());
     }
 
     private void showUseCaseComponents() {
+        clearCanvas();
         useCaseComponentList.setVisible(true);
         classComponentList.setVisible(false);
         showSystemBoundary = true;
+
         drawComponents();
     }
 
@@ -108,12 +120,16 @@ public class MainController {
         classComponentList.setVisible(true);
         useCaseComponentList.setVisible(false);
         showSystemBoundary = false;
+        clearCanvas();
         drawComponents();
     }
 
     private void handleComponentSelection() {
         // Check if "Actor" or "Use Case" is selected
-        selectedTool = useCaseComponentList.getSelectionModel().getSelectedItem();
+        if(useCaseComponentList.isVisible())
+            selectedTool = useCaseComponentList.getSelectionModel().getSelectedItem();
+        else if(classComponentList.isVisible())
+            selectedTool=classComponentList.getSelectionModel().getSelectedItem();
     }
 
     private void handleCanvasClick(MouseEvent event) {
@@ -132,6 +148,13 @@ public class MainController {
                     return;
                 }
             }
+            for (ClassComponent c : classes) {
+                if (c.isSelected()) {
+                    contextMenu2.show(drawingCanvas, event.getScreenX(), event.getScreenY());
+                    return;
+                }
+            }
+
         } else {
             contextMenu.hide();
             if ("Actor".equals(selectedTool)) {
@@ -146,7 +169,20 @@ public class MainController {
                 useCases.add(newUseCase);
                 drawComponents();
                 selectedTool = null; // Reset selected tool
-            } else {
+            }
+            else if("Class".equals(selectedTool))
+            {
+                TextInputDialog dialog = new TextInputDialog("Class Name");
+                dialog.setTitle("Class Name");
+                dialog.setHeaderText("Enter the class name:");
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(className -> {
+                    ClassComponent newClass=new ClassComponent(event.getX(),event.getY(),150,75,className);
+                    classes.add(newClass);
+                    drawComponents();
+                    selectedTool=null;});
+            }
+            else {
                 // Check if the click is within any actor's or use case's bounds
                 for (ActorComponent actor : actors) {
                     double x = event.getX();
@@ -209,10 +245,81 @@ public class MainController {
                         useCase.setSelected(false);
                     }
                 }
+                for(ClassComponent cls : classes)
+                {
+                    double x =event.getX();
+                    double y= event.getY();
+                    double clsX = cls.getX();
+                    double clsY = cls.getY();
+                    double width = cls.getWidth();
+                    double height = cls.getHeight();
+                    if (x >= clsX - width / 2 && x <= clsX + width / 2 && y >= clsY - height / 2 && y <= clsY + height / 2)
+                    { cls.setSelected(true); selectedClass = cls; }
+                    else
+                    { cls.setSelected(false); }
+
+                }
                 drawComponents();
             }
         }
     }
+
+    private void addAttributesFunction() {
+        if (selectedClass != null && selectedClass.isSelected()) {
+            // Show a dialog to edit attributes and methods
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Edit Class");
+            dialog.setHeaderText("Enter attributes or methods (comma separated):");
+            Optional<String> result = dialog.showAndWait();
+
+            result.ifPresent(input -> {
+                String[] parts = input.split(",");
+                for (String part : parts) {
+                    if (part.contains("(") && part.contains(")")) {
+                        //selectedClass.addMethod(part.trim());
+                    } else {
+                        selectedClass.addAttribute(part.trim());
+                    }
+                }
+                selectedClass.setSelected(false);
+                drawComponents();
+
+            });
+            selectedClass.setSelected(false);
+            drawComponents();
+
+        }
+    }
+
+    private void addMethodsFunction() {
+        if (selectedClass != null && selectedClass.isSelected()) {
+            // Show a dialog to edit attributes and methods
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Edit Class");
+            dialog.setHeaderText("Enter attributes or methods (comma separated):");
+            Optional<String> result = dialog.showAndWait();
+
+            result.ifPresent(input -> {
+                String[] parts = input.split(",");
+                for (String part : parts) {
+                    if (part.contains("(") && part.contains(")")) {
+                        selectedClass.addMethod(part.trim());
+                    } else {
+                        //selectedClass.addAttribute(part.trim());
+                    }
+                }
+                selectedClass.setSelected(false);
+                drawComponents();
+
+            });
+            selectedClass.setSelected(false);
+            drawComponents();
+
+        }
+    }
+
+
+
 
     private void handleCanvasDrag(MouseEvent event) {
         for (ActorComponent actor : actors) {
@@ -229,6 +336,15 @@ public class MainController {
                 // Update use case's position as it's dragged
                 useCase.getUseCase().setX(event.getX());
                 useCase.getUseCase().setY(event.getY());
+                drawComponents();
+                break;
+            }
+        }
+        for (ClassComponent c : classes) {
+            if (c.isSelected()) {
+                // Update use case's position as it's dragged
+                c.setX(event.getX());
+                c.setY(event.getY());
                 drawComponents();
                 break;
             }
@@ -251,11 +367,24 @@ public class MainController {
         for (UseCaseComponent useCase : useCases) {
             useCase.draw(gc);
         }
+        for (ClassComponent cls : classes) {
+            cls.draw(gc);
+        }
         for (Connection connection : connections) {
             if (connection.getActor() != null) {
                 connection.draw(gc);
             } else {
                 connection.drawUseCaseToUseCase(gc);
+            }
+        }
+        for(ClassDiagramConnection c:classConnections)
+        {
+            if(c.getStart()!=null && c.getEnd()!=null)
+            {
+                c.draw(gc);
+            }
+            else {
+                System.out.println("Error");
             }
         }
     }
@@ -366,6 +495,8 @@ public class MainController {
         actors.clear();
         useCases.clear();
         connections.clear();
+        classes.clear();
+        classConnections.clear();
     }
 
     private void saveDiagramAsImage() {
@@ -373,7 +504,7 @@ public class MainController {
         fileChooser.setTitle("Save Diagram");
         fileChooser.getExtensionFilters().addAll(
                 new ExtensionFilter("PNG Files", "*.png"),
-                new ExtensionFilter("JPEG Files", "*.jpg", "*.jpeg")
+                new ExtensionFilter("JPEG Files", ".jpg", ".jpeg")
         );
         File file = fileChooser.showSaveDialog(drawingCanvas.getScene().getWindow());
         if (file != null) {
@@ -392,6 +523,88 @@ public class MainController {
         }
     }
 
+    private void addClassDiagramConnection() {
+        if (selectedClass != null) {
+            ClassComponent firstClass = selectedClass;
+            selectedClass = null;
+
+            // Wait for user to click on the second class component
+            drawingCanvas.setOnMouseClicked(event -> {
+                for (ClassComponent secondClass : classes) {
+                    double x = event.getX();
+                    double y = event.getY();
+                    double clsX = secondClass.getX();
+                    double clsY = secondClass.getY();
+                    double width = secondClass.getWidth();
+                    double height = secondClass.getHeight();
+
+                    if (x >= clsX - width / 2 && x <= clsX + width / 2 && y >= clsY - height / 2 && y <= clsY + height / 2) {
+                        // Prompt for arrow type and multiplicity
+                        Dialog<ArrowType> arrowTypeDialog = new Dialog<>();
+                        arrowTypeDialog.setTitle("Select Arrow Type");
+
+                        // Set the button types
+                        ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                        arrowTypeDialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+                        // Create the arrow type selection
+                        ToggleGroup toggleGroup = new ToggleGroup();
+                        RadioButton generalizationButton = new RadioButton("Generalization");
+                        generalizationButton.setToggleGroup(toggleGroup);
+                        generalizationButton.setSelected(true);
+                        RadioButton aggregationButton = new RadioButton("Aggregation");
+                        aggregationButton.setToggleGroup(toggleGroup);
+                        RadioButton compositionButton = new RadioButton("Composition");
+                        compositionButton.setToggleGroup(toggleGroup);
+                        RadioButton associationButton = new RadioButton("Association");
+                        associationButton.setToggleGroup(toggleGroup);
+
+                        VBox vbox = new VBox(generalizationButton, aggregationButton, compositionButton, associationButton);
+                        arrowTypeDialog.getDialogPane().setContent(vbox);
+
+                        arrowTypeDialog.setResultConverter(dialogButton -> {
+                            if (dialogButton == okButtonType) {
+                                if (generalizationButton.isSelected()) {
+                                    return ArrowType.GENERALIZATION;
+                                } else if (aggregationButton.isSelected()) {
+                                    return ArrowType.AGGREGATION;
+                                } else if (compositionButton.isSelected()) {
+                                    return ArrowType.COMPOSITION;
+                                } else {
+                                    return ArrowType.ASSOCIATION;
+                                }
+                            }
+                            return null;
+                        });
+
+                        Optional<ArrowType> arrowTypeResult = arrowTypeDialog.showAndWait();
+
+                        arrowTypeResult.ifPresent(arrowType -> {
+                            // Prompt for multiplicity
+                            TextInputDialog multiplicityDialog = new TextInputDialog("1,1");
+                            multiplicityDialog.setTitle("Multiplicity");
+                            multiplicityDialog.setHeaderText("Enter start and end multiplicity (comma separated):");
+                            Optional<String> multiplicityResult = multiplicityDialog.showAndWait();
+
+                            multiplicityResult.ifPresent(multiplicity -> {
+                                String[] multiplicityParts = multiplicity.split(",");
+                                ClassDiagramConnection newArrow = new ClassDiagramConnection(firstClass, secondClass, arrowType, multiplicityParts[0], multiplicityParts[1]);
+                                classConnections.add(newArrow);
+                                drawComponents();
+                            });
+
+                            // Reset mouse click handler
+                            drawingCanvas.setOnMouseClicked(this::handleCanvasClick);
+                            //break;
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+
+
 
     private String getFileExtension(File file) {
         String fileName = file.getName();
@@ -399,6 +612,6 @@ public class MainController {
             return fileName.substring(fileName.lastIndexOf(".") + 1);
         } else {
             return "";
-        }
-    }
+ }
+}
 }
