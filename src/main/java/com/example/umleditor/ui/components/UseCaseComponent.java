@@ -4,8 +4,10 @@ import com.example.umleditor.data.UseCase;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+import java.io.Serializable;
 
-public class UseCaseComponent {
+public class UseCaseComponent implements Serializable {
+    private static final long serialVersionUID = 1L;
     private UseCase useCase;
     private boolean isSelected;
     private String text;

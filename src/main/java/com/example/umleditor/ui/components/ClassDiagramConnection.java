@@ -1,9 +1,10 @@
 package com.example.umleditor.ui.components;
-
+import java.io.Serializable;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class ClassDiagramConnection {
+public class ClassDiagramConnection implements Serializable{
+    private static final long serialVersionUID = 1L;
     private ClassComponent start;
     private ClassComponent end;
     private ArrowType type;
@@ -43,17 +44,31 @@ public class ClassDiagramConnection {
                 break;
         }
 
-        // Draw multiplicity outside the class components
-        drawMultiplicity(gc, startEdge[0], startEdge[1], startMultiplicity, true);
-        drawMultiplicity(gc, endEdge[0], endEdge[1], endMultiplicity, false);
+        // Draw multiplicity outside the class components with dynamic alignment
+        drawMultiplicity(gc, startEdge, endEdge, startMultiplicity, true);
+        drawMultiplicity(gc, endEdge, startEdge, endMultiplicity, false);
     }
 
-    private void drawMultiplicity(GraphicsContext gc, double x, double y, String multiplicity, boolean isStart) {
-        double offset = 50;
+    private void drawMultiplicity(GraphicsContext gc, double[] edge, double[] oppositeEdge, String multiplicity, boolean isStart) {
+        double offset = 20;
+        double x = edge[0];
+        double y = edge[1];
+
+        // Adjust placement based on the relative position of the opposite edge
         if (isStart) {
-            gc.fillText(multiplicity, x - offset, y+20);
+            if (oppositeEdge[1] > edge[1]) {
+                y += offset;  // Place below if the opposite edge is lower
+            } else {
+                y -= offset;  // Place above if the opposite edge is higher
+            }
+            gc.fillText(multiplicity, x - offset, y);
         } else {
-            gc.fillText(multiplicity, x + offset, y-10);
+            if (oppositeEdge[1] > edge[1]) {
+                y += offset;  // Place below if the opposite edge is lower
+            } else {
+                y -= offset;  // Place above if the opposite edge is higher
+            }
+            gc.fillText(multiplicity, x + offset, y);
         }
     }
 
@@ -63,12 +78,20 @@ public class ClassDiagramConnection {
         double x2 = to.getX();
         double y2 = to.getY();
         double width = from.getWidth() / 2;
-        double height = from.getHeight() / 2;
+        double height = (60 + from.getAttributes().size() * 20 + from.getMethods().size() * 20) / 2;
 
         double angle = Math.atan2(y2 - y1, x2 - x1);
-        double x = x1 + width * Math.cos(angle);
-        double y = y1 + height * Math.sin(angle);
-        return new double[]{x, y};
+        double edgeX = x1 + (width * Math.cos(angle));
+        double edgeY = y1 + (height * Math.sin(angle));
+
+        // Adjust for bottom of methods block boundary
+        if (Math.abs(y2 - y1) > Math.abs(x2 - x1)) {
+            edgeY = y1 + height * (y2 > y1 ? 1 : -1);
+        } else {
+            edgeX = x1 + width * (x2 > x1 ? 1 : -1);
+        }
+
+        return new double[]{edgeX, edgeY};
     }
 
     private void drawTriangle(GraphicsContext gc, double x1, double y1, double x2, double y2) {

@@ -1,6 +1,6 @@
 package com.example.umleditor.data;
-
-public class Actor {
+import java.io.Serializable;
+public class Actor implements Serializable {
     private double x;
     private double y;
     private double size;
@@ -43,6 +43,6 @@ public class Actor {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name=name;
     }
 }

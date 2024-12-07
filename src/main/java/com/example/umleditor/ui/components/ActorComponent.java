@@ -4,8 +4,10 @@ import com.example.umleditor.data.Actor;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+import java.io.Serializable;
 
-public class ActorComponent {
+public class ActorComponent implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Actor actor;
     private boolean isSelected;
     private String text;
@@ -65,6 +67,6 @@ public class ActorComponent {
     }
 
     public void setActor(Actor actor) {
-        this.actor = actor;
+        this.actor =actor;
     }
 }

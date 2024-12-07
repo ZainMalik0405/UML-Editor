@@ -2,8 +2,10 @@ package com.example.umleditor.ui.components;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import java.io.Serializable;
 
-public class Connection {
+public class Connection implements Serializable {
+    private static final long serialVersionUID = 1L;
     private ActorComponent actor;
     private UseCaseComponent useCase;
     private UseCaseComponent useCase1;
@@ -76,6 +78,7 @@ public class Connection {
         return new double[]{x, y};
     }
 
+    // Getters and setters
     public ActorComponent getActor() {
         return actor;
     }
@@ -113,6 +116,6 @@ public class Connection {
     }
 
     public void setLabel(String label) {
-        this.label = label;
+        this.label =label;
     }
 }

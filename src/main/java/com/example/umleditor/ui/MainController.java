@@ -18,9 +18,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.embed.swing.SwingFXUtils;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +45,12 @@ public class MainController {
     @FXML
     private MenuItem saveMenuItem;
 
+    @FXML
+    private MenuItem loadAsXML;
+
+    @FXML
+    private MenuItem saveAsXML;
+
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
@@ -60,7 +66,7 @@ public class MainController {
     private boolean deletingConnection = false;
     private boolean showSystemBoundary = false;
     private boolean isDiagramModified = false;
-
+    private boolean DiagramType;
     private ClassComponent startClass = null;
     private ArrowType selectedArrowType = null;
 
@@ -68,7 +74,7 @@ public class MainController {
     public void initialize() {
         // Set up the component lists
         useCaseComponentList.getItems().addAll("Actor", "Use Case");
-        classComponentList.getItems().addAll("Class", "Arrow");
+        classComponentList.getItems().addAll("Class / Interface");
 
         useCaseButton.setOnAction(event -> showUseCaseComponents());
         classDiagramButton.setOnAction(event -> showClassDiagramComponents());
@@ -102,9 +108,18 @@ public class MainController {
         MenuItem addArrow=new MenuItem("Add Arrow");
         addArrow.setOnAction(event->addClassDiagramConnection());
 
-        contextMenu2.getItems().addAll(addAttribute,addMethod,addArrow);
+        MenuItem removeArrow=new MenuItem("Remove Arrow");
+        removeArrow.setOnAction(event->removeClassDiagramConnection());
+
+        MenuItem delete=new MenuItem("Delete");
+        delete.setOnAction(event->deleteClassDiagramComponents());
+
+        contextMenu2.getItems().addAll(addAttribute,addMethod,addArrow,removeArrow,delete);
         // Set up save menu item
-        saveMenuItem.setOnAction(event -> saveDiagramAsImage());
+        saveMenuItem.setOnAction(event->saveDiagramAsImage());
+
+        loadAsXML.setOnAction(event->loadDiagram());
+        saveAsXML.setOnAction(event->saveDiagram());
     }
 
     private void showUseCaseComponents() {
@@ -112,15 +127,16 @@ public class MainController {
         useCaseComponentList.setVisible(true);
         classComponentList.setVisible(false);
         showSystemBoundary = true;
-
+        DiagramType=true;
         drawComponents();
     }
 
     private void showClassDiagramComponents() {
+        clearCanvas();
         classComponentList.setVisible(true);
         useCaseComponentList.setVisible(false);
         showSystemBoundary = false;
-        clearCanvas();
+        DiagramType=false;
         drawComponents();
     }
 
@@ -170,7 +186,7 @@ public class MainController {
                 drawComponents();
                 selectedTool = null; // Reset selected tool
             }
-            else if("Class".equals(selectedTool))
+            else if("Class / Interface".equals(selectedTool))
             {
                 TextInputDialog dialog = new TextInputDialog("Class Name");
                 dialog.setTitle("Class Name");
@@ -269,7 +285,7 @@ public class MainController {
             // Show a dialog to edit attributes and methods
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Edit Class");
-            dialog.setHeaderText("Enter attributes or methods (comma separated):");
+            dialog.setHeaderText("Enter attributes (comma separated):");
             Optional<String> result = dialog.showAndWait();
 
             result.ifPresent(input -> {
@@ -296,7 +312,7 @@ public class MainController {
             // Show a dialog to edit attributes and methods
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Edit Class");
-            dialog.setHeaderText("Enter attributes or methods (comma separated):");
+            dialog.setHeaderText("Enter methods (comma separated):");
             Optional<String> result = dialog.showAndWait();
 
             result.ifPresent(input -> {
@@ -403,6 +419,11 @@ public class MainController {
         drawComponents();
     }
 
+    private void deleteClassDiagramComponents(){
+        classes.removeIf(ClassComponent::isSelected);
+        drawComponents();
+    }
+
     private void startCreatingConnection() {
         creatingConnection = true;
     }
@@ -497,6 +518,88 @@ public class MainController {
         connections.clear();
         classes.clear();
         classConnections.clear();
+    }
+
+    public void saveDiagram()
+    {   FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Class Diagram");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Serialized Files", "*.ser"));
+        File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            try (FileOutputStream fileOut = new FileOutputStream(file);
+                 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+                if(DiagramType == false){
+                    out.writeObject(classes);
+                    out.writeObject(classConnections);
+                    System.out.println("Class diagram saved to " + file.getAbsolutePath());
+                    JOptionPane.showMessageDialog(null,"Class Diagram Saved");
+                }
+                else
+                {
+                    out.writeObject(actors);
+                    out.writeObject(useCases);
+                    out.writeObject(connections);
+                    System.out.println("Use case diagram saved to " + file.getAbsolutePath());
+                    JOptionPane.showMessageDialog(null,"Use Case Diagram Saved");
+                }
+            } catch (IOException i) {
+                i.printStackTrace();
+            }
+        }
+    }
+
+    public void loadDiagram() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Class Diagram");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Serialized Files", "*.ser"));
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            try (FileInputStream fileIn = new FileInputStream(file);
+                 ObjectInputStream in = new ObjectInputStream(fileIn)) {
+                if(DiagramType==false){
+                    List<ClassComponent> deserializedClasses = (List<ClassComponent>) in.readObject();
+                    List<ClassDiagramConnection> deserializedConnections = (List<ClassDiagramConnection>) in.readObject(); // Clear existing diagram
+                    classes.clear();
+                    connections.clear();
+                    // Add deserialized components to lists
+                    classes.addAll(deserializedClasses);
+                    classConnections.addAll(deserializedConnections); // Redraw the canvas
+                    drawComponents();
+                    System.out.println("Class diagram loaded from " + file.getAbsolutePath());
+                    JOptionPane.showMessageDialog(null,"Class Diagram Loaded Successfully");
+                }
+                else {
+                    List<ActorComponent> deserializedActors = (List<ActorComponent>) in.readObject();
+                    List<UseCaseComponent> deserializedUseCases = (List<UseCaseComponent>) in.readObject();
+                    List<Connection> deserializedConnections = (List<Connection>) in.readObject();
+
+                    clearCanvas();
+
+                    // Add deserialized components to lists
+                    actors.addAll(deserializedActors);
+                    useCases.addAll(deserializedUseCases);
+                    connections.addAll(deserializedConnections);
+
+                    // Redraw the canvas
+                    drawSystemBoundary();
+                    drawComponents();
+                    System.out.println("Use case diagram loaded from " + file.getAbsolutePath());
+                    JOptionPane.showMessageDialog(null,"Use Case Diagram Loaded Successfully");
+
+                }
+            } catch (IOException | ClassNotFoundException | ClassCastException e) {
+                System.err.println("Error loading file: " + e.getMessage());
+                e.printStackTrace(); // Show error alert
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+                alert.setTitle("Load Error");
+                alert.setHeaderText("Invalid File");
+                if(DiagramType==false)
+                    alert.setContentText("The file you selected is not a valid class diagram file.");
+                else
+                    alert.setContentText("The file you selected is not a valid use case diagram file.");
+                alert.showAndWait();
+            }
+        }
     }
 
     private void saveDiagramAsImage() {
@@ -595,7 +698,6 @@ public class MainController {
 
                             // Reset mouse click handler
                             drawingCanvas.setOnMouseClicked(this::handleCanvasClick);
-                            //break;
                         });
                     }
                 }
@@ -605,13 +707,55 @@ public class MainController {
 
 
 
+    private void removeClassDiagramConnection() {
+        if (selectedClass != null) {
+            ClassComponent firstClass = selectedClass;
+            selectedClass = null;
+
+            // Wait for user to click on the second class component
+            drawingCanvas.setOnMouseClicked(event -> {
+                for (ClassComponent secondClass : classes) {
+                    double x = event.getX();
+                    double y = event.getY();
+                    double clsX = secondClass.getX();
+                    double clsY = secondClass.getY();
+                    double width = secondClass.getWidth();
+                    double height = secondClass.getHeight();
+
+                    if (x >= clsX - width / 2 && x <= clsX + width / 2 && y >= clsY - height / 2 && y <= clsY + height / 2) {
+                        // Confirm deletion
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Delete Connection");
+                        alert.setHeaderText("Are you sure you want to delete the connection between these classes?");
+                        Optional<ButtonType> result = alert.showAndWait();
+
+                        if (result.isPresent() && result.get() == ButtonType.OK) {
+                            classConnections.removeIf(connection ->
+                                    (connection.getStart().equals(firstClass) && connection.getEnd().equals(secondClass)) ||
+                                            (connection.getStart().equals(secondClass) && connection.getEnd().equals(firstClass))
+                            );
+                            drawComponents();
+                        }
+
+                        // Reset mouse click handler
+                        drawingCanvas.setOnMouseClicked(this::handleCanvasClick);
+                        break;
+                    }
+                }
+            });
+        }
+    }
+
+
+
+
 
     private String getFileExtension(File file) {
         String fileName = file.getName();
         if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
             return fileName.substring(fileName.lastIndexOf(".") + 1);
         } else {
-            return "";
- }
-}
+            return"";
+        }
+    }
 }

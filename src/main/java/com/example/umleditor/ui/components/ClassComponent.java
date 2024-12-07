@@ -3,11 +3,12 @@ package com.example.umleditor.ui.components;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassComponent {
+public class ClassComponent implements Serializable{
+    private static final long serialVersionUID = 1L;
     private double x;
     private double y;
     private double width;

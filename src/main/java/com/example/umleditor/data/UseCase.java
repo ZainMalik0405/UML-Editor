@@ -1,6 +1,6 @@
 package com.example.umleditor.data;
-
-public class UseCase {
+import java.io.Serializable;
+public class UseCase implements Serializable {
     private double x;
     private double y;
     private double width;
@@ -53,6 +53,6 @@ public class UseCase {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name=name;
     }
 }
