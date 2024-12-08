@@ -24,9 +24,11 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MainController {
 
+    public MenuItem codeGenerate;
     @FXML
     private Button useCaseButton;
 
@@ -117,7 +119,7 @@ public class MainController {
         contextMenu2.getItems().addAll(addAttribute,addMethod,addArrow,removeArrow,delete);
         // Set up save menu item
         saveMenuItem.setOnAction(event->saveDiagramAsImage());
-
+        codeGenerate.setOnAction(event->generateCode());
         loadAsXML.setOnAction(event->loadDiagram());
         saveAsXML.setOnAction(event->saveDiagram());
     }
@@ -186,18 +188,46 @@ public class MainController {
                 drawComponents();
                 selectedTool = null; // Reset selected tool
             }
-            else if("Class / Interface".equals(selectedTool))
-            {
-                TextInputDialog dialog = new TextInputDialog("Class Name");
-                dialog.setTitle("Class Name");
-                dialog.setHeaderText("Enter the class name:");
-                Optional<String> result = dialog.showAndWait();
-                result.ifPresent(className -> {
-                    ClassComponent newClass=new ClassComponent(event.getX(),event.getY(),150,75,className);
-                    classes.add(newClass);
+            else if ("Class / Interface".equals(selectedTool)) {
+                Dialog<ClassComponent> dialog = new Dialog<>();
+                dialog.setTitle("Class / Interface Component");
+                dialog.setHeaderText("Enter the details:");
+
+                // Set the button types
+                ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+                // Create the class/interface selection and name input fields
+                ToggleGroup toggleGroup = new ToggleGroup();
+                RadioButton classButton = new RadioButton("Class");
+                classButton.setToggleGroup(toggleGroup);
+                classButton.setSelected(true); // Default to class
+                RadioButton interfaceButton = new RadioButton("Interface");
+                interfaceButton.setToggleGroup(toggleGroup);
+
+                TextField nameField = new TextField();
+                nameField.setPromptText("Name");
+
+                VBox vbox = new VBox(classButton, interfaceButton, nameField);
+                dialog.getDialogPane().setContent(vbox);
+
+                dialog.setResultConverter(dialogButton -> {
+                    if (dialogButton == okButtonType) {
+                        boolean isInterface = interfaceButton.isSelected();
+                        String name = nameField.getText();
+                        return new ClassComponent(event.getX(), event.getY(), 150, 75, name, isInterface);
+                    }
+                    return null;
+                });
+
+                Optional<ClassComponent> result = dialog.showAndWait();
+                result.ifPresent(classComponent -> {
+                    classes.add(classComponent);
                     drawComponents();
-                    selectedTool=null;});
+                    selectedTool = null;
+                });
             }
+
             else {
                 // Check if the click is within any actor's or use case's bounds
                 for (ActorComponent actor : actors) {
@@ -419,10 +449,28 @@ public class MainController {
         drawComponents();
     }
 
-    private void deleteClassDiagramComponents(){
+    private void deleteClassDiagramComponents() {
+        // Identify selected classes to be removed
+        List<ClassComponent> toBeRemoved = classes.stream()
+                .filter(ClassComponent::isSelected)
+                .collect(Collectors.toList());
+
+        // Remove connections associated with the selected classes
+        for (ClassComponent classComponent : toBeRemoved) {
+            classConnections.removeIf(connection ->
+                    connection.getStart().equals(classComponent) ||
+                            connection.getEnd().equals(classComponent)
+            );
+        }
+
+        // Remove the selected classes
         classes.removeIf(ClassComponent::isSelected);
+
+        // Redraw components to reflect changes
         drawComponents();
     }
+
+    public void generateCode() { CodeGenerator.generateCode(classes); }
 
     private void startCreatingConnection() {
         creatingConnection = true;
@@ -693,6 +741,8 @@ public class MainController {
                                 String[] multiplicityParts = multiplicity.split(",");
                                 ClassDiagramConnection newArrow = new ClassDiagramConnection(firstClass, secondClass, arrowType, multiplicityParts[0], multiplicityParts[1]);
                                 classConnections.add(newArrow);
+                                firstClass.addCon(newArrow);
+                                secondClass.addCon(newArrow);
                                 drawComponents();
                             });
 

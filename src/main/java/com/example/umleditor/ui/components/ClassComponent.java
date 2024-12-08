@@ -17,8 +17,10 @@ public class ClassComponent implements Serializable{
     private boolean isSelected;
     private List<String> attributes;
     private List<String> methods;
+    public List<ClassDiagramConnection> con;
+    private boolean isInterface;
 
-    public ClassComponent(double x, double y, double width, double height, String name) {
+    public ClassComponent(double x, double y, double width, double height, String name, boolean isInterface) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -27,6 +29,17 @@ public class ClassComponent implements Serializable{
         this.isSelected = false;
         this.attributes = new ArrayList<>();
         this.methods = new ArrayList<>();
+        this.isInterface=isInterface;
+        this.con=new ArrayList<>();
+    }
+
+    public void addCon(ClassDiagramConnection c)
+    {
+        con.add(c);
+    }
+    public List<ClassDiagramConnection> getConnections()
+    {
+        return con;
     }
 
     // Draw the class component on the canvas
@@ -46,7 +59,8 @@ public class ClassComponent implements Serializable{
         gc.strokeLine(x - width / 2, y - newHeight / 2 + 30, x + width / 2, y - newHeight / 2 + 30);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.BLACK);
-        gc.fillText(name, x, y - newHeight / 2 + 20);
+        String displayName = isInterface ? "<<Interface>> " + name : name; gc.fillText(displayName, x, y - newHeight / 2 + 20);
+        gc.fillText(displayName, x, y - newHeight / 2 + 20);
 
         // Draw the attributes section
         gc.strokeLine(x - width / 2, y - newHeight / 2 + 30 + attributes.size() * 20 + 10, x + width / 2, y - newHeight / 2 + 30 + attributes.size() * 20 + 10);
@@ -75,6 +89,11 @@ public class ClassComponent implements Serializable{
 
     // Getters and setters
     public double getX() { return x; }
+
+    public boolean isInterface() {
+        return isInterface;
+    }
+
     public void setX(double x) { this.x = x; }
     public double getY() { return y; }
     public void setY(double y) { this.y = y; }

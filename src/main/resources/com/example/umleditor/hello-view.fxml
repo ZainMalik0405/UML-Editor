@@ -14,6 +14,7 @@
                 <MenuItem text="Save As Image" fx:id="saveMenuItem"/>
                 <MenuItem text="Save Diagram as Serializable file" fx:id="saveAsXML"/>
                 <MenuItem text="Load Diagram From Serializable file" fx:id="loadAsXML"/>
+                <MenuItem text="Generate Code" fx:id="codeGenerate"/>
                 <MenuItem text="Exit"/>
             </Menu>
             <Menu text="Edit" style="-fx-text-fill: #ecf0f1;">
