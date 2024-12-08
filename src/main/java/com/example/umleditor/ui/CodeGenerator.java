@@ -65,7 +65,7 @@ public class CodeGenerator {
                 for (String method : classComponent.getMethods()) {
                     String[] parts = method.split(" ");
                     if (parts.length >= 2) {
-                        classCode.append("    public ").append(parts[0]).append(" ").append(parts[1]).append("() {\n");
+                        classCode.append("    public ").append(parts[0]).append(" ").append(parts[1]).append(" {\n");
                         classCode.append("        // TODO: Implement method\n");
                         classCode.append("    }\n");
                     }
@@ -77,7 +77,7 @@ public class CodeGenerator {
                         String endClassName = connection.getEnd().getName();
                         String multiplicity = connection.getEndMultiplicity();
                         int x = Integer.parseInt(multiplicity);
-                        classCode.append("    private ").append(endClassName).append(" ").append(x > 1 ? "List<"+endClassName+"> "+endClassName.toLowerCase()+(";\n")  : endClassName.toLowerCase()).append(";\n");
+                        classCode.append("    private ").append(" ").append(x > 1 ? "List<"+endClassName+"> "+endClassName.toLowerCase()+(";\n")  : endClassName.toLowerCase()).append(";\n");
                     }
                 }
 
