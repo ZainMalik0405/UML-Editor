@@ -11,6 +11,8 @@ module com.example.umleditor {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
     requires javafx.swing;
+    requires org.junit.jupiter.api;
+    requires mockito.all;
 
     opens com.example.umleditor to javafx.fxml;
     exports com.example.umleditor;

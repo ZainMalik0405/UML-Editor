@@ -36,34 +36,34 @@ public class MainController {
     private Button classDiagramButton;
 
     @FXML
-    private ListView<String> useCaseComponentList;
+    public ListView<String> useCaseComponentList;
 
     @FXML
-    private ListView<String> classComponentList;
+    public ListView<String> classComponentList;
 
     @FXML
-    private Canvas drawingCanvas;
+    public Canvas drawingCanvas;
 
     @FXML
-    private MenuItem saveMenuItem;
+    public MenuItem saveMenuItem;
 
     @FXML
-    private MenuItem loadAsXML;
+    public MenuItem loadAsXML;
 
     @FXML
-    private MenuItem saveAsXML;
+    public MenuItem saveAsXML;
 
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
-    private List<ClassComponent> classes=new ArrayList<>();
+    public List<ClassComponent> classes=new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
-    private List<ClassDiagramConnection> classConnections=new ArrayList<>();
+    public List<ClassDiagramConnection> classConnections=new ArrayList<>();
     private ContextMenu contextMenu = new ContextMenu();
     private ContextMenu contextMenu2 = new ContextMenu();
     private ActorComponent selectedActor = null;
     private UseCaseComponent selectedUseCase = null;
-    private ClassComponent selectedClass = null;
+    public ClassComponent selectedClass = null;
     private boolean creatingConnection = false;
     private boolean deletingConnection = false;
     private boolean showSystemBoundary = false;
@@ -449,7 +449,7 @@ public class MainController {
         drawComponents();
     }
 
-    private void deleteClassDiagramComponents() {
+    public void deleteClassDiagramComponents() {
         // Identify selected classes to be removed
         List<ClassComponent> toBeRemoved = classes.stream()
                 .filter(ClassComponent::isSelected)
@@ -674,7 +674,7 @@ public class MainController {
         }
     }
 
-    private void addClassDiagramConnection() {
+    public void addClassDiagramConnection() {
         if (selectedClass != null) {
             ClassComponent firstClass = selectedClass;
             selectedClass = null;
@@ -757,7 +757,7 @@ public class MainController {
 
 
 
-    private void removeClassDiagramConnection() {
+    public void removeClassDiagramConnection() {
         if (selectedClass != null) {
             ClassComponent firstClass = selectedClass;
             selectedClass = null;
