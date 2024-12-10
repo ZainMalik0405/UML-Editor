@@ -10,8 +10,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Generates code for class components in a UML class diagram.
+ * This class handles the creation of Java code files based on class components and their relationships.
+ */
 public class CodeGenerator {
 
+    /**
+     * Generates code for the given list of class components and saves it to the selected directory.
+     *
+     * @param classes the list of class components to generate code for
+     */
     public static void generateCode(List<ClassComponent> classes) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Destination Folder");
@@ -25,13 +34,13 @@ public class CodeGenerator {
 
                 // Handle inheritance (generalization)
                 boolean hasSuperclass = false;
-                boolean i=false;
+                boolean isInterface = false;
                 String superclassName = "";
                 for (ClassDiagramConnection connection : classComponent.getConnections()) {
                     if (ArrowType.GENERALIZATION.equals(connection.getType()) && connection.getStart().equals(classComponent)) {
                         hasSuperclass = true;
                         superclassName = connection.getEnd().getName();
-                        i=connection.getEnd().isInterface();
+                        isInterface = connection.getEnd().isInterface();
                         break;
                     }
                 }
@@ -40,11 +49,9 @@ public class CodeGenerator {
                 if (!classComponent.isInterface()) {
                     classCode.append("public class ").append(className);
                     if (hasSuperclass) {
-                        if(i==false)
-                        {
+                        if (!isInterface) {
                             classCode.append(" extends ").append(superclassName);
-                        }
-                        else {
+                        } else {
                             classCode.append(" implements ").append(superclassName);
                         }
                     }
@@ -65,7 +72,7 @@ public class CodeGenerator {
                 for (String method : classComponent.getMethods()) {
                     String[] parts = method.split(" ");
                     if (parts.length >= 2) {
-                        classCode.append("    public ").append(parts[0]).append(" ").append(parts[1]).append(" {\n");
+                        classCode.append("    public ").append(parts[0]).append(" ").append(parts[1]).append("() {\n");
                         classCode.append("        // TODO: Implement method\n");
                         classCode.append("    }\n");
                     }
@@ -77,7 +84,7 @@ public class CodeGenerator {
                         String endClassName = connection.getEnd().getName();
                         String multiplicity = connection.getEndMultiplicity();
                         int x = Integer.parseInt(multiplicity);
-                        classCode.append("    private ").append(" ").append(x > 1 ? "List<"+endClassName+"> "+endClassName.toLowerCase()+(";\n")  : endClassName.toLowerCase()).append(";\n");
+                        classCode.append("    private ").append(x > 1 ? "List<" + endClassName + "> " + endClassName.toLowerCase() : endClassName.toLowerCase()).append(";\n");
                     }
                 }
 

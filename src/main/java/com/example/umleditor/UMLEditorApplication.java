@@ -7,7 +7,19 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+/**
+ * Main application class for the UML Editor.
+ * This class extends the JavaFX Application class and serves as the entry point for the application.
+ */
 public class UMLEditorApplication extends Application {
+
+    /**
+     * Starts the JavaFX application.
+     * Loads the FXML layout and applies the stylesheet.
+     *
+     * @param stage the primary stage for this application
+     * @throws IOException if the FXML file cannot be loaded
+     */
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(UMLEditorApplication.class.getResource("hello-view.fxml"));
@@ -21,7 +33,11 @@ public class UMLEditorApplication extends Application {
         stage.show();
     }
 
-
+    /**
+     * The main method for launching the application.
+     *
+     * @param args the command-line arguments
+     */
     public static void main(String[] args) {
         launch();
     }

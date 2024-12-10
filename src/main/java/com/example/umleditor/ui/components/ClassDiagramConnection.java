@@ -1,9 +1,14 @@
 package com.example.umleditor.ui.components;
-import java.io.Serializable;
+
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import java.io.Serializable;
 
-public class ClassDiagramConnection implements Serializable{
+/**
+ * Represents a connection (relationship) between two class components in a UML class diagram.
+ * This class handles the rendering and management of different types of relationships.
+ */
+public class ClassDiagramConnection implements Serializable {
     private static final long serialVersionUID = 1L;
     private ClassComponent start;
     private ClassComponent end;
@@ -11,6 +16,15 @@ public class ClassDiagramConnection implements Serializable{
     private String startMultiplicity;
     private String endMultiplicity;
 
+    /**
+     * Constructs a ClassDiagramConnection with the specified properties.
+     *
+     * @param start             the starting class component
+     * @param end               the ending class component
+     * @param type              the type of arrow (relationship)
+     * @param startMultiplicity the multiplicity at the start of the relationship
+     * @param endMultiplicity   the multiplicity at the end of the relationship
+     */
     public ClassDiagramConnection(ClassComponent start, ClassComponent end, ArrowType type, String startMultiplicity, String endMultiplicity) {
         this.start = start;
         this.end = end;
@@ -19,6 +33,11 @@ public class ClassDiagramConnection implements Serializable{
         this.endMultiplicity = endMultiplicity;
     }
 
+    /**
+     * Draws the connection on the canvas.
+     *
+     * @param gc the graphics context used for drawing
+     */
     public void draw(GraphicsContext gc) {
         gc.setLineWidth(2);
         gc.setStroke(Color.BLACK);
@@ -142,42 +161,93 @@ public class ClassDiagramConnection implements Serializable{
     }
 
     // Getters and setters
+
+    /**
+     * Gets the starting class component of the connection.
+     *
+     * @return the starting class component
+     */
     public ClassComponent getStart() {
         return start;
     }
 
+    /**
+     * Sets the starting class component of the connection.
+     *
+     * @param start the new starting class component
+     */
     public void setStart(ClassComponent start) {
         this.start = start;
     }
 
+    /**
+     * Gets the ending class component of the connection.
+     *
+     * @return the ending class component
+     */
     public ClassComponent getEnd() {
         return end;
     }
 
+    /**
+     * Sets the ending class component of the connection.
+     *
+     * @param end the new ending class component
+     */
     public void setEnd(ClassComponent end) {
         this.end = end;
     }
 
+    /**
+     * Gets the type of arrow (relationship) of the connection.
+     *
+     * @return the type of arrow
+     */
     public ArrowType getType() {
         return type;
     }
 
+    /**
+     * Sets the type of arrow (relationship) of the connection.
+     *
+     * @param type the new type of arrow
+     */
     public void setType(ArrowType type) {
         this.type = type;
     }
 
+    /**
+     * Gets the start multiplicity of the connection.
+     *
+     * @return the start multiplicity
+     */
     public String getStartMultiplicity() {
         return startMultiplicity;
     }
 
+    /**
+     * Sets the start multiplicity of the connection.
+     *
+     * @param startMultiplicity the new start multiplicity
+     */
     public void setStartMultiplicity(String startMultiplicity) {
         this.startMultiplicity = startMultiplicity;
     }
 
+    /**
+     * Gets the end multiplicity of the connection.
+     *
+     * @return the end multiplicity
+     */
     public String getEndMultiplicity() {
         return endMultiplicity;
     }
 
+    /**
+     * Sets the end multiplicity of the connection.
+     *
+     * @param endMultiplicity the new end multiplicity
+     */
     public void setEndMultiplicity(String endMultiplicity) {
         this.endMultiplicity = endMultiplicity;
     }

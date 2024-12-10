@@ -26,9 +26,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * MainController class manages the interactions and operations within the UML editor.
+ */
 public class MainController {
 
+    /**
+     * MenuItem for generating code from the diagram.
+     */
     public MenuItem codeGenerate;
+
     @FXML
     private Button useCaseButton;
 
@@ -56,9 +63,9 @@ public class MainController {
     private String selectedTool = null;
     private List<ActorComponent> actors = new ArrayList<>();
     private List<UseCaseComponent> useCases = new ArrayList<>();
-    public List<ClassComponent> classes=new ArrayList<>();
+    public List<ClassComponent> classes = new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
-    public List<ClassDiagramConnection> classConnections=new ArrayList<>();
+    public List<ClassDiagramConnection> classConnections = new ArrayList<>();
     private ContextMenu contextMenu = new ContextMenu();
     private ContextMenu contextMenu2 = new ContextMenu();
     private ActorComponent selectedActor = null;
@@ -72,6 +79,10 @@ public class MainController {
     private ClassComponent startClass = null;
     private ArrowType selectedArrowType = null;
 
+    /**
+     * Initializes the controller class. This method is automatically called
+     * after the FXML file has been loaded.
+     */
     @FXML
     public void initialize() {
         // Set up the component lists
@@ -89,6 +100,7 @@ public class MainController {
         // Set up drag-and-drop events on the actor component
         useCaseComponentList.setOnMouseClicked(event -> handleComponentSelection());
         classComponentList.setOnMouseClicked(event -> handleComponentSelection());
+
         // Set up context menu
         MenuItem deleteItem = new MenuItem("Delete");
         deleteItem.setOnAction(event -> deleteSelectedComponent());
@@ -100,56 +112,74 @@ public class MainController {
         deleteConnectionItem.setOnAction(event -> startDeletingConnection());
         contextMenu.getItems().addAll(deleteItem, addTextItem, createConnectionItem, deleteConnectionItem);
 
-
         MenuItem addAttribute = new MenuItem("Add Attribute");
-        addAttribute.setOnAction(event->addAttributesFunction());
+        addAttribute.setOnAction(event -> addAttributesFunction());
 
         MenuItem addMethod = new MenuItem("Add Method");
-        addMethod.setOnAction(event->addMethodsFunction());
+        addMethod.setOnAction(event -> addMethodsFunction());
 
-        MenuItem addArrow=new MenuItem("Add Arrow");
-        addArrow.setOnAction(event->addClassDiagramConnection());
+        MenuItem addArrow = new MenuItem("Add Arrow");
+        addArrow.setOnAction(event -> addClassDiagramConnection());
 
-        MenuItem removeArrow=new MenuItem("Remove Arrow");
-        removeArrow.setOnAction(event->removeClassDiagramConnection());
+        MenuItem removeArrow = new MenuItem("Remove Arrow");
+        removeArrow.setOnAction(event -> removeClassDiagramConnection());
 
-        MenuItem delete=new MenuItem("Delete");
-        delete.setOnAction(event->deleteClassDiagramComponents());
+        MenuItem delete = new MenuItem("Delete");
+        delete.setOnAction(event -> deleteClassDiagramComponents());
 
-        contextMenu2.getItems().addAll(addAttribute,addMethod,addArrow,removeArrow,delete);
+        contextMenu2.getItems().addAll(addAttribute, addMethod, addArrow, removeArrow, delete);
+
         // Set up save menu item
-        saveMenuItem.setOnAction(event->saveDiagramAsImage());
-        codeGenerate.setOnAction(event->generateCode());
-        loadAsXML.setOnAction(event->loadDiagram());
-        saveAsXML.setOnAction(event->saveDiagram());
+        saveMenuItem.setOnAction(event -> saveDiagramAsImage());
+        codeGenerate.setOnAction(event -> generateCode());
+        loadAsXML.setOnAction(event -> loadDiagram());
+        saveAsXML.setOnAction(event -> saveDiagram());
     }
 
+    /**
+     * Shows the use case components on the canvas.
+     * Clears the canvas and sets up the visibility of the use case component list.
+     */
     private void showUseCaseComponents() {
         clearCanvas();
         useCaseComponentList.setVisible(true);
         classComponentList.setVisible(false);
         showSystemBoundary = true;
-        DiagramType=true;
+        DiagramType = true;
         drawComponents();
     }
 
+    /**
+     * Shows the class diagram components on the canvas.
+     * Clears the canvas and sets up the visibility of the class component list.
+     */
     private void showClassDiagramComponents() {
         clearCanvas();
         classComponentList.setVisible(true);
         useCaseComponentList.setVisible(false);
         showSystemBoundary = false;
-        DiagramType=false;
+        DiagramType = false;
         drawComponents();
     }
 
+    /**
+     * Handles the selection of components from the list views.
+     * Sets the selected tool based on the visible component list.
+     */
     private void handleComponentSelection() {
-        // Check if "Actor" or "Use Case" is selected
-        if(useCaseComponentList.isVisible())
+        if (useCaseComponentList.isVisible()) {
             selectedTool = useCaseComponentList.getSelectionModel().getSelectedItem();
-        else if(classComponentList.isVisible())
-            selectedTool=classComponentList.getSelectionModel().getSelectedItem();
+        } else if (classComponentList.isVisible()) {
+            selectedTool = classComponentList.getSelectionModel().getSelectedItem();
+        }
     }
 
+    /**
+     * Handles mouse click events on the canvas.
+     * Determines whether to show the context menu, place a new component, or select an existing component.
+     *
+     * @param event the mouse event
+     */
     private void handleCanvasClick(MouseEvent event) {
         isDiagramModified = true;
         if (event.getButton() == MouseButton.SECONDARY) {
@@ -172,7 +202,6 @@ public class MainController {
                     return;
                 }
             }
-
         } else {
             contextMenu.hide();
             if ("Actor".equals(selectedTool)) {
@@ -187,8 +216,7 @@ public class MainController {
                 useCases.add(newUseCase);
                 drawComponents();
                 selectedTool = null; // Reset selected tool
-            }
-            else if ("Class / Interface".equals(selectedTool)) {
+            } else if ("Class / Interface".equals(selectedTool)) {
                 Dialog<ClassComponent> dialog = new Dialog<>();
                 dialog.setTitle("Class / Interface Component");
                 dialog.setHeaderText("Enter the details:");
@@ -226,9 +254,7 @@ public class MainController {
                     drawComponents();
                     selectedTool = null;
                 });
-            }
-
-            else {
+            } else {
                 // Check if the click is within any actor's or use case's bounds
                 for (ActorComponent actor : actors) {
                     double x = event.getX();
@@ -291,25 +317,29 @@ public class MainController {
                         useCase.setSelected(false);
                     }
                 }
-                for(ClassComponent cls : classes)
-                {
-                    double x =event.getX();
-                    double y= event.getY();
+                for (ClassComponent cls : classes) {
+                    double x = event.getX();
+                    double y = event.getY();
                     double clsX = cls.getX();
                     double clsY = cls.getY();
                     double width = cls.getWidth();
                     double height = cls.getHeight();
-                    if (x >= clsX - width / 2 && x <= clsX + width / 2 && y >= clsY - height / 2 && y <= clsY + height / 2)
-                    { cls.setSelected(true); selectedClass = cls; }
-                    else
-                    { cls.setSelected(false); }
-
+                    if (x >= clsX - width / 2 && x <= clsX + width / 2 && y >= clsY - height / 2 && y <= clsY + height / 2) {
+                        cls.setSelected(true);
+                        selectedClass = cls;
+                    } else {
+                        cls.setSelected(false);
+                    }
                 }
                 drawComponents();
             }
         }
     }
 
+    /**
+     * Adds attributes to the selected class component.
+     * Prompts the user to enter attributes via a dialog.
+     */
     private void addAttributesFunction() {
         if (selectedClass != null && selectedClass.isSelected()) {
             // Show a dialog to edit attributes and methods
@@ -329,14 +359,16 @@ public class MainController {
                 }
                 selectedClass.setSelected(false);
                 drawComponents();
-
             });
             selectedClass.setSelected(false);
             drawComponents();
-
         }
     }
 
+    /**
+     * Adds methods to the selected class component.
+     * Prompts the user to enter methods via a dialog.
+     */
     private void addMethodsFunction() {
         if (selectedClass != null && selectedClass.isSelected()) {
             // Show a dialog to edit attributes and methods
@@ -356,17 +388,18 @@ public class MainController {
                 }
                 selectedClass.setSelected(false);
                 drawComponents();
-
             });
             selectedClass.setSelected(false);
             drawComponents();
-
         }
     }
 
-
-
-
+    /**
+     * Handles mouse drag events on the canvas.
+     * Updates the position of the selected component as it's dragged.
+     *
+     * @param event the mouse event
+     */
     private void handleCanvasDrag(MouseEvent event) {
         for (ActorComponent actor : actors) {
             if (actor.isSelected()) {
@@ -397,10 +430,20 @@ public class MainController {
         }
     }
 
+    /**
+     * Handles mouse release events on the canvas.
+     * Currently, this method is a placeholder for handling mouse release events if needed.
+     *
+     * @param event the mouse event
+     */
     private void handleCanvasRelease(MouseEvent event) {
         // Handle mouse release events if needed
     }
 
+    /**
+     * Draws all components on the canvas.
+     * Clears the canvas and redraws actors, use cases, class components, and connections.
+     */
     private void drawComponents() {
         GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
@@ -423,18 +466,19 @@ public class MainController {
                 connection.drawUseCaseToUseCase(gc);
             }
         }
-        for(ClassDiagramConnection c:classConnections)
-        {
-            if(c.getStart()!=null && c.getEnd()!=null)
-            {
+        for (ClassDiagramConnection c : classConnections) {
+            if (c.getStart() != null && c.getEnd() != null) {
                 c.draw(gc);
-            }
-            else {
+            } else {
                 System.out.println("Error");
             }
         }
     }
 
+    /**
+     * Draws the system boundary on the canvas.
+     * The system boundary is represented by a rectangular box.
+     */
     private void drawSystemBoundary() {
         GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
         gc.setLineWidth(2);
@@ -442,6 +486,10 @@ public class MainController {
         gc.strokeRect(150, 10, drawingCanvas.getWidth() - 200, drawingCanvas.getHeight() - 50); // Adjusted height
     }
 
+    /**
+     * Deletes the selected component (actor or use case) from the diagram.
+     * Redraws the components after deletion.
+     */
     private void deleteSelectedComponent() {
         actors.removeIf(ActorComponent::isSelected);
         useCases.removeIf(UseCaseComponent::isSelected);
@@ -449,6 +497,10 @@ public class MainController {
         drawComponents();
     }
 
+    /**
+     * Deletes the selected class components from the class diagram.
+     * Removes the class components and their associated connections, then redraws the components.
+     */
     public void deleteClassDiagramComponents() {
         // Identify selected classes to be removed
         List<ClassComponent> toBeRemoved = classes.stream()
@@ -470,16 +522,30 @@ public class MainController {
         drawComponents();
     }
 
+    /**
+     * Generates code for the class diagram.
+     * Uses the CodeGenerator class to generate code based on the class components.
+     */
     public void generateCode() { CodeGenerator.generateCode(classes); }
 
+    /**
+     * Starts the process of creating a connection between components.
+     */
     private void startCreatingConnection() {
         creatingConnection = true;
     }
 
+    /**
+     * Starts the process of deleting a connection between components.
+     */
     private void startDeletingConnection() {
         deletingConnection = true;
     }
 
+    /**
+     * Adds text to the selected component (actor or use case).
+     * Prompts the user to enter text via a dialog.
+     */
     private void addTextToSelectedComponent() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Text");
@@ -500,6 +566,12 @@ public class MainController {
         });
     }
 
+    /**
+     * Deletes the connection involving the specified use case component.
+     * Displays an error alert if no connection is found.
+     *
+     * @param useCase the use case component whose connections are to be deleted
+     */
     private void deleteConnection(UseCaseComponent useCase) {
         boolean connectionFound = false;
         List<Connection> connectionsToRemove = new ArrayList<>();
@@ -522,7 +594,12 @@ public class MainController {
         drawComponents();
     }
 
-
+    /**
+     * Deletes the connection involving the specified actor component.
+     * Displays an error alert if no connection is found.
+     *
+     * @param actor the actor component whose connections are to be deleted
+     */
     private void deleteConnection(ActorComponent actor) {
         boolean connectionFound = false;
         List<Connection> connectionsToRemove = new ArrayList<>();
@@ -558,6 +635,9 @@ public class MainController {
         }
     }
 
+    /**
+     * Clears the canvas by removing all drawings and resets the component lists.
+     */
     private void clearCanvas() {
         GraphicsContext gc = drawingCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
@@ -568,27 +648,29 @@ public class MainController {
         classConnections.clear();
     }
 
-    public void saveDiagram()
-    {   FileChooser fileChooser = new FileChooser();
+    /**
+     * Saves the current diagram (either class or use case) to a file.
+     * Prompts the user to select a location to save the file and handles serialization.
+     */
+    public void saveDiagram() {
+        FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Class Diagram");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Serialized Files", "*.ser"));
         File file = fileChooser.showSaveDialog(null);
         if (file != null) {
             try (FileOutputStream fileOut = new FileOutputStream(file);
                  ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
-                if(DiagramType == false){
+                if (DiagramType == false) {
                     out.writeObject(classes);
                     out.writeObject(classConnections);
                     System.out.println("Class diagram saved to " + file.getAbsolutePath());
-                    JOptionPane.showMessageDialog(null,"Class Diagram Saved");
-                }
-                else
-                {
+                    JOptionPane.showMessageDialog(null, "Class Diagram Saved");
+                } else {
                     out.writeObject(actors);
                     out.writeObject(useCases);
                     out.writeObject(connections);
                     System.out.println("Use case diagram saved to " + file.getAbsolutePath());
-                    JOptionPane.showMessageDialog(null,"Use Case Diagram Saved");
+                    JOptionPane.showMessageDialog(null, "Use Case Diagram Saved");
                 }
             } catch (IOException i) {
                 i.printStackTrace();
@@ -596,6 +678,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Loads a diagram (either class or use case) from a file.
+     * Prompts the user to select a file to load and handles deserialization.
+     */
     public void loadDiagram() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Class Diagram");
@@ -604,19 +690,20 @@ public class MainController {
         if (file != null) {
             try (FileInputStream fileIn = new FileInputStream(file);
                  ObjectInputStream in = new ObjectInputStream(fileIn)) {
-                if(DiagramType==false){
+                if (DiagramType == false) {
                     List<ClassComponent> deserializedClasses = (List<ClassComponent>) in.readObject();
-                    List<ClassDiagramConnection> deserializedConnections = (List<ClassDiagramConnection>) in.readObject(); // Clear existing diagram
+                    List<ClassDiagramConnection> deserializedConnections = (List<ClassDiagramConnection>) in.readObject();
+                    // Clear existing diagram
                     classes.clear();
                     connections.clear();
                     // Add deserialized components to lists
                     classes.addAll(deserializedClasses);
-                    classConnections.addAll(deserializedConnections); // Redraw the canvas
+                    classConnections.addAll(deserializedConnections);
+                    // Redraw the canvas
                     drawComponents();
                     System.out.println("Class diagram loaded from " + file.getAbsolutePath());
-                    JOptionPane.showMessageDialog(null,"Class Diagram Loaded Successfully");
-                }
-                else {
+                    JOptionPane.showMessageDialog(null, "Class Diagram Loaded Successfully");
+                } else {
                     List<ActorComponent> deserializedActors = (List<ActorComponent>) in.readObject();
                     List<UseCaseComponent> deserializedUseCases = (List<UseCaseComponent>) in.readObject();
                     List<Connection> deserializedConnections = (List<Connection>) in.readObject();
@@ -632,16 +719,16 @@ public class MainController {
                     drawSystemBoundary();
                     drawComponents();
                     System.out.println("Use case diagram loaded from " + file.getAbsolutePath());
-                    JOptionPane.showMessageDialog(null,"Use Case Diagram Loaded Successfully");
-
+                    JOptionPane.showMessageDialog(null, "Use Case Diagram Loaded Successfully");
                 }
             } catch (IOException | ClassNotFoundException | ClassCastException e) {
                 System.err.println("Error loading file: " + e.getMessage());
-                e.printStackTrace(); // Show error alert
+                e.printStackTrace();
+                // Show error alert
                 javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
                 alert.setTitle("Load Error");
                 alert.setHeaderText("Invalid File");
-                if(DiagramType==false)
+                if (DiagramType == false)
                     alert.setContentText("The file you selected is not a valid class diagram file.");
                 else
                     alert.setContentText("The file you selected is not a valid use case diagram file.");
@@ -650,6 +737,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Saves the current diagram as an image file (PNG or JPEG).
+     * Prompts the user to select a location to save the image file.
+     */
     private void saveDiagramAsImage() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Diagram");
@@ -674,6 +765,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Adds a class diagram connection between two selected class components.
+     * Prompts the user to select an arrow type and multiplicity for the connection.
+     */
     public void addClassDiagramConnection() {
         if (selectedClass != null) {
             ClassComponent firstClass = selectedClass;
@@ -755,8 +850,10 @@ public class MainController {
         }
     }
 
-
-
+    /**
+     * Removes a class diagram connection between two selected class components.
+     * Prompts the user to confirm the deletion before removing the connection.
+     */
     public void removeClassDiagramConnection() {
         if (selectedClass != null) {
             ClassComponent firstClass = selectedClass;
@@ -796,16 +893,19 @@ public class MainController {
         }
     }
 
-
-
-
-
+    /**
+     * Gets the file extension from the provided file.
+     *
+     * @param file the file to get the extension from
+     * @return the file extension, or an empty string if none is found
+     */
     private String getFileExtension(File file) {
         String fileName = file.getName();
         if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
             return fileName.substring(fileName.lastIndexOf(".") + 1);
         } else {
-            return"";
+            return "";
         }
     }
+
 }

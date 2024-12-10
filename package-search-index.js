@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"m":"com.example.umleditor","l":"com.example.umleditor"},{"m":"com.example.umleditor","l":"com.example.umleditor.data"},{"m":"com.example.umleditor","l":"com.example.umleditor.ui"},{"m":"com.example.umleditor","l":"com.example.umleditor.ui.components"}];updateSearchResults();
