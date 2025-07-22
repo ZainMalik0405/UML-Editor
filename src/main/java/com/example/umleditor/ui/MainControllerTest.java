@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class MainControllerTest {
 
     private MainController controller;
-
     @BeforeEach
     void setUp() {
         // Initialize JavaFX toolkit
@@ -33,8 +32,8 @@ class MainControllerTest {
         controller.codeGenerate = new MenuItem();
         controller.loadAsXML = new MenuItem();
         controller.saveAsXML = new MenuItem();
-
         controller.initialize();
+
     }
 
     @Test
